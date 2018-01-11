@@ -71,6 +71,7 @@ import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
 import javax.net.ssl.TrustManagerFactory;
 import java.lang.reflect.Constructor;
+import java.lang.reflect.InvocationTargetException;
 import java.net.InetAddress;
 import java.net.InetSocketAddress;
 import java.nio.file.Path;
@@ -754,12 +755,19 @@ public interface Client {
      */
     @Nonnull
     static Builder builder() {
+        String message = "Kitteh IRC Client Library cannot create a Client builder.";
         try {
             Constructor<?> constructor = Class.forName(Client.class.getPackage().getName() + ".defaults.DefaultBuilder").getDeclaredConstructor();
             constructor.setAccessible(true);
             return (Builder) constructor.newInstance();
+        } catch (InvocationTargetException e) {
+            if ((e.getCause() instanceof IllegalAccessError) && (e.getCause().getCause() instanceof NoClassDefFoundError)) {
+                throw new RuntimeException(message + " Are you sure the dependencies (Especially MBassador) are accessible?", e);
+            } else {
+                throw new RuntimeException(message, e);
+            }
         } catch (Exception e) {
-            throw new RuntimeException("Kitteh IRC Client Library cannot create a Client builder.", e);
+            throw new RuntimeException(message, e);
         }
     }
 
